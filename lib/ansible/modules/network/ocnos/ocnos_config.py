@@ -248,10 +248,22 @@ def run(module, result):
     path = module.params['parents']
     check_mode = module.check_mode
 
+    debug_node = module.params['debug']
+
     candidate = get_candidate(module)
+
+    if debug_node:
+        result['candidate'] = []
+        for item in candidate.items:
+            result['candidate'].append(str(item))
 
     if match != 'none' and replace != 'config':
         contents = get_running_config(module)
+        if debug_node:
+            result['running'] = []
+            for item in contents.items:
+                result['running'].append(str(item))
+
         configobj = NetworkConfig(contents=contents, indent=1)
         commands = candidate.difference(configobj, path=path, match=match,
                                         replace=replace)
@@ -316,6 +328,8 @@ def main():
         backup_options=dict(type='dict', options=backup_spec),
         save_when=dict(choices=['always', 'never', 'modified', 'changed'], default='never'),
         diff_ignore_lines=dict(type='list'),
+
+        debug=dict(type='bool', default=False),
     )
 
     argument_spec.update(ocnos_argument_spec)
